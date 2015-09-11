@@ -22,10 +22,23 @@ function cleanInstruction(blocks_, instruction) {
         }
         sub.length = 1;
       } else if (instruction == "COMMENT") {
+        var prev = sub.getPreviousBlock(true);
+        var minus = prev && (prev.rowIndex == sub.rowIndex);
+
+        if (!minus) {
+          var next = sub.getNextBlock(true);
+          minus = next && (next.rowIndex == sub.rowIndex);
+        }
+
         if (sub.delimiter == "/*") {
           var data = sub.getData();
-          sub.repeats = data.split('\n').length;
+          sub.repeats = data.split('\n').length - (minus ? 1 : 0);
         }
+
+        if (minus) { // skip adding new line. comment is on the same line
+          continue;
+        }
+
         sub.length = null; // we want delimiter to return
         sub.type = "NEW_LINE";
         sub.delimiter = "\n";
