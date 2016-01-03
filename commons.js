@@ -229,7 +229,7 @@ function block() {
     } else {
       var prev = _this.getPreviousBlock();
 
-      if (prev && prev.type === "SET_VARIABLE") {
+      if (prev && prev.type.indexOf("SET_VARIABLE_") === 0) {
         if (_this.parent) {
           _this.parent.variables[str] = {};
         }
