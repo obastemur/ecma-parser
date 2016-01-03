@@ -14,6 +14,7 @@ var types = {
   "//": "COMMENT",
   "/*": "COMMENT",
   "function": "FUNCTION",
+  "=>": "ARROW_FUNCTION",
   "{": "SCOPE",
   "}": "SCOPE_END", // skip only
   ":": "COLON",
@@ -63,8 +64,9 @@ var types = {
   "typeof":"TYPEOF",
   "instanceof":"INSTANCEOF",
   "\t": "TAB",
-  "var": "SET_VARIABLE",
-  "let": "SET_VARIABLE_2", // todo consider scope differences
+  "var": "SET_VARIABLE_VAR",
+  "let": "SET_VARIABLE_LET", // todo consider scope differences
+  "const": "SET_VARIABLE_CONST",
   "?": "LINER_IF"
 };
 
@@ -95,6 +97,7 @@ var signs = {
   "<=": "LOWER_THAN_EQUAL",
   ">": "BIGGER_THAN",
   ">=": "BIGGER_THAN_EQUAL",
+  "=>": "ARROW_FUNCTION",
   ".": "DOT",
   "!": "NOT",
   "=": "EQUALS",
