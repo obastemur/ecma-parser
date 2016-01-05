@@ -210,6 +210,8 @@ function block() {
   this.getData = function() {
     if (_this.index == null || _this.length == null) return list[this.type];
 
+    if (_this.type == "WORD" && _this.newName) return _this.newName;
+
     return exports.code.substr(_this.index-1, _this.length);
   };
 
@@ -229,13 +231,24 @@ function block() {
     } else {
       var prev = _this.getPreviousBlock();
 
-      if (prev && prev.type.indexOf("SET_VARIABLE_") === 0) {
+      if (prev && (prev.type.indexOf("SET_VARIABLE_") === 0 || prev.type == "FUNCTION")) {
         if (_this.parent) {
           _this.parent.variables[str] = {};
         }
-        _this.dataType = "new_variable";
+        _this.dataType = "NEW_DEFINITION";
       }
     }
+  };
+
+  this.IsNewDefinition = function() {
+    return _this.dataType == "NEW_DEFINITION";
+  };
+
+  this.updateName = function(name) {
+    if (_this.type != "WORD")
+      throw new TypeError("This method requires a WORD type");
+
+    _this.newName = name;
   };
 
   // returns none space etc previous item
