@@ -79,11 +79,11 @@ Return source code for the instruction block
 `.dataType` : Data type of the instruction block  
 `.rowIndex` : Row index of the instruction  
 `.columnIndex` : Column index of the instruction  
-`.getData()` : Get the string data from the instruction (name of the variable for WORDs)
-`.isNewDefinition()` : Is this block represents a new named definition?
-`.isProperty()` : Is this block represents an Object property ?
-`.updateName(name)` : Update the variable name (only for the current instance)
-`.getPreviousBlock(noskip)` : Returns previous instruction block (None space, comment, new line or semi colon)  
+`.getData()` : Get the string data from the instruction (name of the variable for WORDs)  
+`.isNewDefinition()` : Is this block represents a new named definition?  
+`.isProperty()` : Is this block represents an Object property ?  
+`.updateName(name)` : Update the variable name (only for the current instance)  
+`.getPreviousBlock(noskip)` : Returns previous instruction block (None space, comment, new line or semi colon)   
 `.getNextBlock(noskip)` : Returns previous instruction block (None space, comment, new line or semi colon)  
 
 * set noskip = true to get next or previous block regardless from it's type
