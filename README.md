@@ -1,12 +1,11 @@
 ### Ecmascript Parser
 
-Ecmascript, Javascript instruction parser. Tested on popular Javascript modules (i.e. JQuery)
+Ecmascript instruction parser. Tested on popular Javascript modules (i.e. JQuery)
 
 ### How it works
 
 - Download [JXcore](https://jxcore.com/downloads)
 - type `jx install ecma-parser` or `npm install ecma-parser`
-- You can also use `npm` directly to install
 
 #### Sample Code:
 ```
@@ -73,8 +72,8 @@ Return source code for the instruction block
 `.subs` : Array of sub instructions or blocks  
 `.type` : Instruction type  
 `.index` : Instruction start index  
-`.length` : Length of instruction
-`.repeats` : If `true`, delimiter should repeat on output `.length` times
+`.length` : Length of instruction  
+`.repeats` : If `true`, delimiter should repeat on output `.length` times  
 `.delimiter` : Instruction identifier  
 `.dataType` : Data type of the instruction block  
 `.rowIndex` : Row index of the instruction  
@@ -88,11 +87,10 @@ Return source code for the instruction block
 
 * set noskip = true to get next or previous block regardless from it's type
 
-### Testing
+### Samples
 
-Use `parse_folder.js` under samples folder. (*nix only)
+Visit samples folder. i.e Use `parse_folder.js` under samples folder. (*nix only)
 
-i.e.
 ```
 jx samples/parse_folder.js jquery.1.1.min.x.js
 ```
@@ -103,5 +101,5 @@ The MIT License (MIT)
 Copyright (c) 2015 Oguz Bastemur
 
 ### Contribution
-This particular project is intended to parse EcmaScript 6 compliant Javascript code. Feel free to contribute 
-under the MIT and intention of this project.
+This particular project is intended to parse EcmaScript 6 compliant Javascript code. 
+Feel free to contribute under the MIT and intention of this project.
