@@ -65,9 +65,42 @@ var types = {
   "instanceof":"INSTANCEOF",
   "\t": "TAB",
   "var": "SET_VARIABLE_VAR",
-  "let": "SET_VARIABLE_LET", // todo consider scope differences
+  "let": "SET_VARIABLE_LET",
   "const": "SET_VARIABLE_CONST",
-  "?": "LINER_IF"
+  "?": "LINER_IF",
+  "Date": "DATE",
+  "this": "JS_THIS",
+  "Error": "ERROR",
+  "TypeError": "ERROR",
+  "SyntaxError": "ERROR",
+  "RangeError": "ERROR",
+  "ReferenceError": "ERROR",
+  "EvalError": "ERROR",
+  "setTimeout": "JS_TIMER",
+  "setInterval": "JS_TIMER",
+  "clearInterval": "JS_TIMER",
+  "Array": "ARRAY",
+  "ArrayBuffer": "ARRAY_BUFFER",
+  "Object": "JS_OBJECT",
+  "Math": "MATH",
+  "new": "JS_NEW",
+  "arguments": "JS_ARGUMENTS",
+  "eval": "JS_EVAL",
+  "class": "JS_CLASS",
+  "default": "CASE_DEFAULT",
+  "NaN": "JS_NAN",
+  "isNaN": "JS_ISNAN",
+  "parseFloat": "JS_PARSE_FLOAT",
+  "parseInt": "JS_PARSE_INT",
+  "null": "JS_NULL",
+  "undefined": "JS_UNDEFINED",
+  "true": "JS_TRUE",
+  "false": "JS_FALSE",
+  "continue": "JS_CONTINUE",
+  "finally": "JS_FINALLY",
+  "String": "JS_STRING",
+  "RegExp": "JS_REGEXP",
+  "delete": "JS_DELETE"
 };
 
 var signs = {
@@ -210,16 +243,23 @@ function block() {
   this.getData = function() {
     if (_this.index == null || _this.length == null) return list[this.type];
 
-    if (_this.type == "WORD" && _this.newName) return _this.newName;
+    if (_this.newName) return _this.newName;
 
     return exports.code.substr(_this.index-1, _this.length);
   };
 
   this.findType = function() {
-    var str = _this.getData().trim();
-    if (!str) {
+    if (_this._dataTypeFound)
+      return _this.dataType;
+
+    var str = _this.getData();
+    _this._dataTypeFound = true;
+
+    if (str) {
+      str = str.trim();
+    } else {
       _this.dataType = 'undefined';
-      return;
+      return _this.dataType;
     }
 
     if (str == 'null') {
@@ -235,19 +275,38 @@ function block() {
         if (_this.parent) {
           _this.parent.variables[str] = {};
         }
-        _this.dataType = "NEW_DEFINITION";
+        _this.dataType = "new_variable";
+      } else {
+        _this.dataType = "unknown";
       }
     }
+
+    return _this.dataType;
   };
 
-  this.IsNewDefinition = function() {
-    return _this.dataType == "NEW_DEFINITION";
+  this.isNewDefinition = function() {
+    return _this.dataType == "new_variable";
+  };
+
+  this.isProperty = function() {
+    if (_this.type != "WORD") return false;
+
+    var bl = _this.getPreviousBlock();
+
+    if (bl && bl.delimiter == ".") return true;
+
+    if (bl && bl.delimiter == ":") return false;
+
+    if (_this.parent) {
+      var type = _this.parent.findType();
+
+      if (type == "object") return true;
+    }
+
+    return false;
   };
 
   this.updateName = function(name) {
-    if (_this.type != "WORD")
-      throw new TypeError("This method requires a WORD type");
-
     _this.newName = name;
   };
 
