@@ -22,6 +22,7 @@ function identifyScope(scope) {
   if (!bl) {
     // {}
     scope.dataType = "object";
+    scope._dataTypeFound = true;
     return;
   }
 
@@ -48,6 +49,7 @@ function identifyScope(scope) {
 
         if (!bl) {
           scope.dataType = "object";
+          scope._dataTypeFound = true;
 
           if (hasComma) {
             commons.errorInfo = {
@@ -200,6 +202,8 @@ function fillComment(pchar, char, nchar, index) {
 
     // do not add the last \n
     commons.activeBlock.length = (index - commons.activeBlock.index);
+    commons.activeBlock.dataType = "comment";
+    commons.activeBlock._dataTypeFound = true;
     saveBlock(index);
     return next(pchar,char, nchar, index);
   }
@@ -209,6 +213,8 @@ function fillComment(pchar, char, nchar, index) {
 
     if (pchar == '*') {
       commons.activeBlock.length = (index - commons.activeBlock.index) + 1;
+      commons.activeBlock.dataType = "comment";
+      commons.activeBlock._dataTypeFound = true;
       saveBlock(index);
     }
   }
