@@ -1,6 +1,6 @@
 {
   "name": "ecma-parser",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Ecmascript Parser",
   "author": {
     "name": "Oguz Bastemur",
