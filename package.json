@@ -1,6 +1,6 @@
 {
   "name": "ecma-parser",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Ecmascript Parser",
   "author": {
     "name": "Oguz Bastemur",
@@ -14,7 +14,7 @@
     "node": ">= 0.10.0",
     "jxcore": ">= 0.3.0.1"
   },
-  "main":"parser.js",
+  "main": "parser.js",
   "license": "MIT",
   "homepage": "https://github.com/obastemur/ecma-parser",
   "readmeFilename": "README.md"

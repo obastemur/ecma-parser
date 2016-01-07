@@ -1,3 +1,8 @@
+/*
+ * The MIT License (MIT)
+ * Copyright (c) 2015 Oguz Bastemur
+ */
+
 var commons = require('./commons');
 var types = commons.types;
 var Block = commons.block;
@@ -53,23 +58,27 @@ function identifyScope(scope) {
 
           if (hasComma) {
             commons.errorInfo = {
-              type: "SyntaxError",
-              msg: "Unintentional comma at the end of the object definition",
-              column: scope.columnIndex,
-              row: scope.rowIndex
+              type : "SyntaxError",
+              msg : "Unintentional comma at the end of the object definition",
+              column : scope.columnIndex,
+              row : scope.rowIndex
             };
           }
           return;
         }
-      } else break;
-    } else break;
-  } while(bl);
+      } else
+        break;
+    } else
+      break;
+  } while (bl);
 }
 
 function saveBlock(index) {
-  if (!commons.activeBlock) throw new Error("no active block!");
+  if (!commons.activeBlock)
+    throw new Error("no active block!");
 
-  if (commons.activeBlock.type != "STRING" && commons.activeBlock.type != "SCOPE") {
+  if (commons.activeBlock.type != "STRING"
+    && commons.activeBlock.type != "SCOPE") {
     commons.activeBlock.columnIndex += commons.activeBlock.index - index;
   }
 
@@ -120,16 +129,17 @@ function fillString(pchar, char, nchar, index) {
 
     // throw a syntax error
     return {
-      type: "SyntaxError",
-      msg: "String definition breaks.",
-      row: commons.rowIndex,
-      column: commons.columnIndex
+      type : "SyntaxError",
+      msg : "String definition breaks.",
+      row : commons.rowIndex,
+      column : commons.columnIndex
     };
   }
 
   if (char == commons.activeBlock.delimiter) {
     if (pchar == '\\') {
-      if (passSlash(index)) return;
+      if (passSlash(index))
+        return;
     }
 
     commons.activeBlock.length = (index - commons.activeBlock.index) + 1;
@@ -139,7 +149,7 @@ function fillString(pchar, char, nchar, index) {
 
 function passSlash(index) {
   var counter = 0;
-  index -=1; // we receive index starting from 1 (this is not the 0-> index)
+  index -= 1; // we receive index starting from 1 (this is not the 0-> index)
   for (var i = index - 1; i > commons.activeBlock.index - 1; i--) {
     var ch = commons.code.charAt(i);
     if (ch == '\\')
@@ -157,7 +167,9 @@ function regexFail(index) {
   commons.activeBlock.type = types['/'];
   commons.activeBlock.length = 1;
   saveBlock(index);
-  return {move: n};
+  return {
+    move : n
+  };
 }
 
 function fillRegex(pchar, char, nchar, index) {
@@ -168,17 +180,22 @@ function fillRegex(pchar, char, nchar, index) {
   if (finishes || (char == '/' && !commons.activeBlock.regexOpen)) {
     // if previous char was a '\' then continue ( \\/ )
     if (pchar == '\\') {
-      if (passSlash(index)) return;
+      if (passSlash(index))
+        return;
     }
 
-    commons.activeBlock.length = (index - commons.activeBlock.index) + (finishes ? 2 : 1);
+    commons.activeBlock.length = (index - commons.activeBlock.index)
+    + (finishes ? 2 : 1);
     saveBlock(index);
 
-    return {move: finishes ? 1 : 0};
+    return {
+      move : finishes ? 1 : 0
+    };
   } else {
     if ((pchar != '\\' && char == '[') || (char == '{' && nchar == '{')) {
       commons.activeBlock.regexOpen = char;
-    } else if (commons.activeBlock.regexOpen == '{' && char == '}' && nchar == '}') {
+    } else if (commons.activeBlock.regexOpen == '{' && char == '}'
+      && nchar == '}') {
       commons.activeBlock.regexOpen = false;
     } else if (commons.activeBlock.regexOpen == '[' && nchar == ']') {
       commons.activeBlock.regexOpen = false;
@@ -205,11 +222,12 @@ function fillComment(pchar, char, nchar, index) {
     commons.activeBlock.dataType = "comment";
     commons.activeBlock._dataTypeFound = true;
     saveBlock(index);
-    return next(pchar,char, nchar, index);
+    return next(pchar, char, nchar, index);
   }
 
   if (commons.activeBlock.delimiter == '/*') {
-    if (char != '/') return;
+    if (char != '/')
+      return;
 
     if (pchar == '*') {
       commons.activeBlock.length = (index - commons.activeBlock.index) + 1;
@@ -273,39 +291,44 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
 
   // check comment block
   if (char == '/' && (nchar == '/' || nchar == '*')) {
-    saveWord(index, types.hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
+    saveWord(index,
+      types.hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
     newBlock("/" + nchar, index);
     commons.activeWord = "";
     return;
   }
 
-  switch(char) {
+  switch (char) {
     case '{': {
       // if there is any word save it
-      saveWord(index, types.hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
+      saveWord(index,
+        types.hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
       newBlock('{', index);
       commons.activeBlock.codeIndex = commons.activeBlock.index;
-      commons.activeBlock.index = null; // for scope, function etc. don't hold the normal index
+      commons.activeBlock.index = null; // for scope, function etc. don't hold the
+                                        // normal index
       return;
-    }break;
+    }
+      break;
 
     case "'":
     case '"': {
-      if(commons.activeWord.length) {
+      if (commons.activeWord.length) {
         if (types.hasOwnProperty(commons.activeWord)) {
           saveWord(index, commons.activeWord);
         } else {
           return {
-            type: "SyntaxError",
-            msg: "Unexpected char(s) '" + commons.activeWord + "'",
-            row: commons.rowIndex,
-            column: commons.columnIndex - commons.activeWord.length
+            type : "SyntaxError",
+            msg : "Unexpected char(s) '" + commons.activeWord + "'",
+            row : commons.rowIndex,
+            column : commons.columnIndex - commons.activeWord.length
           };
         }
       }
       newBlock(char, index);
       return;
-    } break;
+    }
+      break;
 
     case "/": {
       if (types.hasOwnProperty(commons.activeWord)) {
@@ -319,13 +342,14 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
 
         var bl = node.getPreviousBlock();
 
-        if (!bl || (bl && bl.type != "WORD" && bl.type != "ARRAY_CLOSE" && (commons.prexp[bl.type] || bl.type == "PTS_CLOSE" ))) {
+        if (!bl
+          || (bl && bl.type != "WORD" && bl.type != "ARRAY_CLOSE" && (commons.prexp[bl.type] || bl.type == "PTS_CLOSE"))) {
           var pass = bl ? commons.prexp[bl.type] : true;
           if (!pass) {
             if (bl.type == "PTS_CLOSE") {
               node = bl;
               // find if for while etc.
-              //first find (
+              // first find (
               do {
                 bl = node.getPreviousBlock();
                 if (bl)
@@ -335,10 +359,10 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
               if (!bl) {
                 // something is wrong there is no (
                 return {
-                  type: "SyntaxError",
-                  msg: "Couldn't locate the (",
-                  column: commons.columnIndex,
-                  row: commons.rowIndex
+                  type : "SyntaxError",
+                  msg : "Couldn't locate the (",
+                  column : commons.columnIndex,
+                  row : commons.rowIndex
                 };
               }
 
@@ -359,24 +383,27 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
         }
       }
 
-      if (!types.hasOwnProperty(char+nchar) && commons.activeWord.length) {
+      if (!types.hasOwnProperty(char + nchar) && commons.activeWord.length) {
         // if there is any space save it
-        saveWord(index, types.hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
+        saveWord(index,
+          types.hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
         newBlock(char, index);
         return;
       }
-    } break;
+    }
+      break;
 
     case '\\': {
       if (nchar != 'u') {
         return {
-          type: "SyntaxError",
-          msg: "Unexpected char '\\'",
-          row: commons.rowIndex,
-          column: commons.columnIndex
+          type : "SyntaxError",
+          msg : "Unexpected char '\\'",
+          row : commons.rowIndex,
+          column : commons.columnIndex
         };
       }
-    } break;
+    }
+      break;
 
     default:
   }
@@ -386,8 +413,9 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
 
     var hide_pc = 0;
     // skip to next char in case of != == etc. but not for ===
-    if (types.hasOwnProperty(char+nchar) && !types.hasOwnProperty(pchar+char+nchar)) {
-      if(!types.hasOwnProperty(pchar + char))
+    if (types.hasOwnProperty(char + nchar)
+      && !types.hasOwnProperty(pchar + char + nchar)) {
+      if (!types.hasOwnProperty(pchar + char))
         return;
       else {
         hide_pc = 1;
@@ -395,11 +423,11 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
     }
 
     // now it's time to see if we have something i.e. ===
-    if (types.hasOwnProperty(pchar+char+nchar)) {
-      tmp = pchar+char+nchar;
+    if (types.hasOwnProperty(pchar + char + nchar)) {
+      tmp = pchar + char + nchar;
       tmp_index = 1;
     } else if (types.hasOwnProperty(pchar + char)) { // how about == etc. ?
-      tmp = pchar+char;
+      tmp = pchar + char;
       tmp_index = 0;
     }
 
@@ -420,14 +448,18 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
 
     // save the block if it's exist
     if (tmp && types.hasOwnProperty(tmp)) {
-      newBlock(tmp, index-(tmp.length+1));
+      newBlock(tmp, index - (tmp.length + 1));
       saveBlock(index);
-      return {move:tmp_index == 1 ? 1 : 0, hide_pc: hide_pc};
+      return {
+        move : tmp_index == 1 ? 1 : 0,
+        hide_pc : hide_pc
+      };
     }
 
     newBlock(char, (index - commons.activeWord.length));
 
-    commons.activeBlock.length = commons.activeWord.length ? commons.activeWord.length : 1;
+    commons.activeBlock.length = commons.activeWord.length ? commons.activeWord.length
+      : 1;
     saveBlock(index);
     commons.activeWord = '';
     return;
@@ -464,7 +496,7 @@ exports.parse = function(filename, code) {
     // i.e. x++===y ++ and += might mix
     // if hide_pc is received deliver ~~ instead of +
     // on next call
-    var err = next(hide_pc ? "~~" : pc, ch, nc, i+1);
+    var err = next(hide_pc ? "~~" : pc, ch, nc, i + 1);
 
     hide_pc = (err && err.hide_pc);
 
@@ -488,26 +520,31 @@ exports.parse = function(filename, code) {
       if (commons.activeBlock)
         saveBlock(i);
 
-      throw new Error(err.type + ": " + err.msg + " at " + err.row + ":" + err.column + " (" + filename + ")");
+      throw new Error(err.type + ": " + err.msg + " at " + err.row + ":"
+      + err.column + " (" + filename + ")");
     }
 
     i += move;
   }
 
   if (commons.activeBlock) {
-    if (commons.activeBlock.type == "COMMENT" && commons.activeBlock.delimiter == "//") {
+    if (commons.activeBlock.type == "COMMENT"
+      && commons.activeBlock.delimiter == "//") {
       commons.activeBlock.length = ((commons.code.length - 1) - commons.activeBlock.index);
       saveBlock(commons.activeBlock.index + commons.activeBlock.length);
     } else {
       require('./writer').printBlocks(blocks);
-      throw new Error("Reached end of file. One or more scope(s) left open. See at " +
-      ((commons.activeBlock.index || commons.activeBlock.codeIndex) + 1)
-       + " or (" + commons.activeBlock.rowIndex + ":" + commons.activeBlock.columnIndex + ")");
+      throw new Error(
+        "Reached end of file. One or more scope(s) left open. See at "
+        + ((commons.activeBlock.index || commons.activeBlock.codeIndex) + 1)
+        + " or (" + commons.activeBlock.rowIndex + ":"
+        + commons.activeBlock.columnIndex + ")");
     }
   }
 
   if (commons.activeWord.length) {
-    saveWord(code.length - commons.activeWord.length, types.hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
+    saveWord(code.length - commons.activeWord.length, types
+      .hasOwnProperty(commons.activeWord) ? commons.activeWord : null);
   }
 
   return blocks;

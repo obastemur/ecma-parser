@@ -1,156 +1,181 @@
+/*
+ * The MIT License (MIT)
+ * Copyright (c) 2015 Oguz Bastemur
+ */
+
 var types = {
   "++" : "INCREMENT",
   "--" : "DECREASE",
-  "+=": "PLUS_EQUAL",
-  "*=": "MULTIPLY_EQUAL",
-  "-=": "MINUS_EQUAL",
-  "/=": "DIV_EQUAL",
-  "^=": "BT_EQUAL",
-  "|=": "MOD_EQUAL",
-  "WORD": "WORD",
-  " ": "SPACE",
-  '"': "STRING",
-  "'": "STRING",
-  "//": "COMMENT",
-  "/*": "COMMENT",
-  "function": "FUNCTION",
-  "=>": "ARROW_FUNCTION",
-  "{": "SCOPE",
-  "}": "SCOPE_END", // skip only
-  ":": "COLON",
-  ";": "SEMI_COLON",
-  "+": "PLUS",
-  "%":"PERCENTAGE",
-  "%=":"PERCENTAGE_EQUAL",
-  "Regex": "REGEX",
-  "^": "BT_SIGN",
-  "/": "DIV",
-  "-": "MINUS",
-  ",": "COMMA",
-  "*": "MULTIPLY",
-  "|": "MOD",
-  "||": "OR",
-  "&":"AND_OPERATOR",
-  "&&": "AND",
-  "<": "LOWER_THAN",
-  "<=": "LOWER_THAN_EQUAL",
-  ">": "BIGGER_THAN",
-  ">=": "BIGGER_THAN_EQUAL",
-  ".": "DOT",
-  "!": "NOT",
-  "=": "EQUALS",
-  "==": "IF_EQUALS",
-  "===": "IF_STRONG_EQUALS",
-  "!=": "IF_DIFFERENT",
-  "!==": "IF_STRONG_DIFFERENT",
-  "(": "PTS_OPEN",
-  ")": "PTS_CLOSE",
-  "\n": "NEW_LINE",
-  "\r": "R_LINE",
-  "[": "ARRAY_OPEN",
-  "]": "ARRAY_CLOSE",
-  "if": "IF",
-  "else": "ELSE",
-  "for": "FOR",
-  "while": "WHILE",
-  "switch": "SWITCH",
-  "do": "DO",
-  "case": "CASE",
-  "return": "RETURN",
-  "break": "BREAK",
-  "throw": "THROW",
-  "try": "TRY",
-  "catch": "CATCH",
-  "typeof":"TYPEOF",
-  "instanceof":"INSTANCEOF",
-  "\t": "TAB",
-  "var": "SET_VARIABLE_VAR",
-  "let": "SET_VARIABLE_LET",
-  "const": "SET_VARIABLE_CONST",
-  "?": "LINER_IF",
-  "Date": "DATE",
-  "this": "JS_THIS",
-  "Error": "ERROR",
-  "TypeError": "ERROR",
-  "SyntaxError": "ERROR",
-  "RangeError": "ERROR",
-  "ReferenceError": "ERROR",
-  "EvalError": "ERROR",
-  "setTimeout": "JS_TIMER",
-  "setInterval": "JS_TIMER",
-  "clearInterval": "JS_TIMER",
-  "Array": "ARRAY",
-  "ArrayBuffer": "ARRAY_BUFFER",
-  "Object": "JS_OBJECT",
-  "Math": "MATH",
-  "new": "JS_NEW",
-  "arguments": "JS_ARGUMENTS",
-  "eval": "JS_EVAL",
-  "class": "JS_CLASS",
-  "default": "CASE_DEFAULT",
-  "NaN": "JS_NAN",
-  "isNaN": "JS_ISNAN",
-  "parseFloat": "JS_PARSE_FLOAT",
-  "parseInt": "JS_PARSE_INT",
-  "null": "JS_NULL",
-  "undefined": "JS_UNDEFINED",
-  "true": "JS_TRUE",
-  "false": "JS_FALSE",
-  "continue": "JS_CONTINUE",
-  "finally": "JS_FINALLY",
-  "String": "JS_STRING",
-  "RegExp": "JS_REGEXP",
-  "delete": "JS_DELETE"
+  "+=" : "PLUS_EQUAL",
+  "*=" : "MULTIPLY_EQUAL",
+  "-=" : "MINUS_EQUAL",
+  "/=" : "DIV_EQUAL",
+  "^=" : "BT_EQUAL",
+  "|=" : "MOD_EQUAL",
+  "~" : "BIT_NOT",
+  "~~" : "BIT_NOT_NOT",
+  "~=" : "BIT_NOT_EQUAL",
+  "WORD" : "WORD",
+  " " : "SPACE",
+  '"' : "STRING",
+  "'" : "STRING",
+  "//" : "COMMENT",
+  "/*" : "COMMENT",
+  "function" : "FUNCTION",
+  "=>" : "ARROW_FUNCTION",
+  "{" : "SCOPE",
+  "}" : "SCOPE_END", // skip only
+  ":" : "COLON",
+  ";" : "SEMI_COLON",
+  "+" : "PLUS",
+  "%" : "PERCENTAGE",
+  "%=" : "PERCENTAGE_EQUAL",
+  "^" : "BT_SIGN",
+  "/" : "DIV",
+  "-" : "MINUS",
+  "," : "COMMA",
+  "*" : "MULTIPLY",
+  "|" : "MOD",
+  "||" : "OR",
+  "&" : "AND_OPERATOR",
+  "&&" : "AND",
+  "<" : "LOWER_THAN",
+  "<=" : "LOWER_THAN_EQUAL",
+  ">" : "BIGGER_THAN",
+  ">=" : "BIGGER_THAN_EQUAL",
+  "." : "DOT",
+  "!" : "NOT",
+  "=" : "EQUALS",
+  "==" : "IF_EQUALS",
+  "===" : "IF_STRONG_EQUALS",
+  "!=" : "IF_DIFFERENT",
+  "!==" : "IF_STRONG_DIFFERENT",
+  "(" : "PTS_OPEN",
+  ")" : "PTS_CLOSE",
+  "\n" : "NEW_LINE",
+  "\r" : "R_LINE",
+  "[" : "ARRAY_OPEN",
+  "]" : "ARRAY_CLOSE",
+  "if" : "JS_IF",
+  "else" : "JS_ELSE",
+  "for" : "JS_FOR",
+  "while" : "JS_WHILE",
+  "switch" : "JS_SWITCH",
+  "do" : "JS_DO",
+  "case" : "JS_CASE",
+  "return" : "JS_RETURN",
+  "break" : "JS_BREAK",
+  "throw" : "JS_THROW",
+  "try" : "JS_TRY",
+  "catch" : "JS_CATCH",
+  "typeof" : "JS_TYPEOF",
+  "instanceof" : "JS_INSTANCEOF",
+  "\t" : "TAB",
+  "var" : "SET_VARIABLE_VAR",
+  "let" : "SET_VARIABLE_LET",
+  "const" : "SET_VARIABLE_CONST",
+  "?" : "LINER_IF",
+  "Date" : "JS_DATE",
+  "this" : "JS_THIS",
+  "Error" : "JS_ERROR",
+  "TypeError" : "JS_ERROR",
+  "SyntaxError" : "JS_ERROR",
+  "RangeError" : "JS_ERROR",
+  "ReferenceError" : "JS_ERROR",
+  "EvalError" : "JS_ERROR",
+  "URIError" : "JS_URI_ERROR",
+  "setTimeout" : "JS_TIMER",
+  "setInterval" : "JS_TIMER",
+  "clearInterval" : "JS_TIMER",
+  "Array" : "JS_ARRAY",
+  "ArrayBuffer" : "JS_ARRAY_BUFFER",
+  "Object" : "JS_OBJECT",
+  "String" : "JS_STRING",
+  "Number" : "JS_NUMBER",
+  "Boolean" : "JS_BOOLEAN",
+  "Math" : "JS_MATH",
+  "new" : "JS_NEW",
+  "arguments" : "JS_ARGUMENTS",
+  "eval" : "JS_EVAL",
+  "class" : "JS_CLASS",
+  "default" : "JS_DEFAULT",
+  "NaN" : "JS_NAN",
+  "isNaN" : "JS_ISNAN",
+  "parseFloat" : "JS_PARSE_FLOAT",
+  "parseInt" : "JS_PARSE_INT",
+  "null" : "JS_NULL",
+  "undefined" : "JS_UNDEFINED",
+  "true" : "JS_TRUE",
+  "false" : "JS_FALSE",
+  "continue" : "JS_CONTINUE",
+  "finally" : "JS_FINALLY",
+  "RegExp" : "JS_REGEXP",
+  "delete" : "JS_DELETE",
+  "JSON" : "JS_JSON",
+  "isFinite" : "JS_IS_FINITE",
+  "escape" : "JS_ESCAPE",
+  "unescape" : "JS_UNESCAPE",
+  "Infinity" : "JS_INFINITY",
+  "decodeURI" : "JS_DECODE_URI",
+  "decodeURIComponent" : "JS_DECODE_URI_COMPONENT",
+  "encodeURI" : "JS_ENCODE_URI",
+  "encodeURIComponent" : "JS_ENCODE_URI_COMPONENT",
+  "debugger" : "JS_DEBUGGER",
+  "export" : "export",
+  "import" : "import",
+  "in" : "JS_IN",
+  "with" : "JS_WITH",
+  "yield" : "JS_YIELD"
 };
 
 var signs = {
   "++" : "INCREMENT",
   "--" : "DECREASE",
-  "+=": "PLUS_EQUAL",
-  "*=": "MULTIPLY_EQUAL",
-  "-=": "MINUS_EQUAL",
-  "/=": "DIV_EQUAL",
-  "|=": "MOD_EQUAL",
-  "{": "SCOPE",
-  "}": "SCOPE_END", // skip only
-  ":": "COLON",
-  ";": "SEMI_COLON",
-  "+": "PLUS",
-  "%":"PERCENTAGE",
-  "%=":"PERCENTAGE_EQUAL",
-  "/": "DIV",
-  "-": "MINUS",
-  ",": "COMMA",
-  "*": "MULTIPLY",
-  "|": "MOD",
-  "||": "OR",
-  "&":"AND_OPERATOR",
-  "&&": "AND",
-  "<": "LOWER_THAN",
-  "<=": "LOWER_THAN_EQUAL",
-  ">": "BIGGER_THAN",
-  ">=": "BIGGER_THAN_EQUAL",
-  "=>": "ARROW_FUNCTION",
-  ".": "DOT",
-  "!": "NOT",
-  "=": "EQUALS",
-  "==": "IF_EQUALS",
-  "===": "IF_STRONG_EQUALS",
-  "!=": "IF_DIFFERENT",
-  "!==": "IF_STRONG_DIFFERENT",
-  "(": "PTS_OPEN",
-  ")": "PTS_CLOSE",
-  "[": "ARRAY_OPEN",
-  "]": "ARRAY_CLOSE",
-  "?": "LINER_IF",
-  "^": "BT_SIGN",
-  "^=": "BT_EQUAL"
+  "+=" : "PLUS_EQUAL",
+  "*=" : "MULTIPLY_EQUAL",
+  "-=" : "MINUS_EQUAL",
+  "/=" : "DIV_EQUAL",
+  "|=" : "MOD_EQUAL",
+  "{" : "SCOPE",
+  "}" : "SCOPE_END", // skip only
+  ":" : "COLON",
+  ";" : "SEMI_COLON",
+  "+" : "PLUS",
+  "%" : "PERCENTAGE",
+  "%=" : "PERCENTAGE_EQUAL",
+  "/" : "DIV",
+  "-" : "MINUS",
+  "," : "COMMA",
+  "*" : "MULTIPLY",
+  "|" : "MOD",
+  "||" : "OR",
+  "&" : "AND_OPERATOR",
+  "&&" : "AND",
+  "<" : "LOWER_THAN",
+  "<=" : "LOWER_THAN_EQUAL",
+  ">" : "BIGGER_THAN",
+  ">=" : "BIGGER_THAN_EQUAL",
+  "=>" : "ARROW_FUNCTION",
+  "." : "DOT",
+  "!" : "NOT",
+  "=" : "EQUALS",
+  "==" : "IF_EQUALS",
+  "===" : "IF_STRONG_EQUALS",
+  "!=" : "IF_DIFFERENT",
+  "!==" : "IF_STRONG_DIFFERENT",
+  "(" : "PTS_OPEN",
+  ")" : "PTS_CLOSE",
+  "[" : "ARRAY_OPEN",
+  "]" : "ARRAY_CLOSE",
+  "?" : "LINER_IF",
+  "^" : "BT_SIGN",
+  "^=" : "BT_EQUAL"
 };
 
 var reverse_signs = {};
 
-for(var o in types) {
-  if (!signs.hasOwnProperty(o)){
+for ( var o in types) {
+  if (!signs.hasOwnProperty(o)) {
     continue;
   }
   reverse_signs[signs[o]] = o;
@@ -159,58 +184,58 @@ for(var o in types) {
 exports.signs = reverse_signs;
 
 exports.prexp = {
-  "COMMA": ",",
+  "COMMA" : ",",
   "MOD" : "|",
   "NOT" : "!",
   "OR" : "||",
   "AND" : "&&",
-  "SEMI_COLON": ";",
-  "EQUALS": "=",
-  "PTS_OPEN": "(",
-  "COLON": ":",
-  "PLUS_EQUAL" :"+=",
-  "MULTIPLY_EQUAL": "*=",
-  "MINUS_EQUAL": "-=",
-  "DIV_EQUAL": "/=",
-  "MOD_EQUAL": "|=",
-  "ARRAY_OPEN": "[",
-  "IF_EQUALS": "==",
-  "IF_STRONG_EQUALS":"===",
-  "IF_DIFFERENT":"!=",
-  "IF_STRONG_DIFFERENT":"!==",
-  "LOWER_THAN":"<",
-  "LOWER_THAN_EQUAL":"<=",
-  "BIGGER_THAN":">",
-  "BIGGER_THAN_EQUAL":">=",
-  "RETURN":"return",
-  "LINER_IF":"?",
-  "ELSE":"else",
-  "PLUS":"+",
-  "MINUS":"-",
-  "MULTIPLY":"*",
-  "PERCENTAGE":"%"
+  "SEMI_COLON" : ";",
+  "EQUALS" : "=",
+  "PTS_OPEN" : "(",
+  "COLON" : ":",
+  "PLUS_EQUAL" : "+=",
+  "MULTIPLY_EQUAL" : "*=",
+  "MINUS_EQUAL" : "-=",
+  "DIV_EQUAL" : "/=",
+  "MOD_EQUAL" : "|=",
+  "ARRAY_OPEN" : "[",
+  "IF_EQUALS" : "==",
+  "IF_STRONG_EQUALS" : "===",
+  "IF_DIFFERENT" : "!=",
+  "IF_STRONG_DIFFERENT" : "!==",
+  "LOWER_THAN" : "<",
+  "LOWER_THAN_EQUAL" : "<=",
+  "BIGGER_THAN" : ">",
+  "BIGGER_THAN_EQUAL" : ">=",
+  "RETURN" : "return",
+  "LINER_IF" : "?",
+  "ELSE" : "else",
+  "PLUS" : "+",
+  "MINUS" : "-",
+  "MULTIPLY" : "*",
+  "PERCENTAGE" : "%"
 };
 
 exports.headlessScopes = {
-  "IF": "if",
-  "FOR": "for",
-  "WHILE": "while"
+  "IF" : "if",
+  "FOR" : "for",
+  "WHILE" : "while"
 };
 
 exports.noCode = {
-  "R_LINE": "\r",
-  "SPACE": " ",
-  "TAB": "\t",
-  "NEW_LINE": "\n",
-  "COMMENT": "//"
+  "R_LINE" : "\r",
+  "SPACE" : " ",
+  "TAB" : "\t",
+  "NEW_LINE" : "\n",
+  "COMMENT" : "//"
 };
 
 exports.types = types;
 
 var list = {};
 
-for(var o in types) {
-  if (!types.hasOwnProperty(o)){
+for ( var o in types) {
+  if (!types.hasOwnProperty(o)) {
     continue;
   }
   list[types[o]] = o;
@@ -225,7 +250,8 @@ exports.columnIndex = 1;
 exports.rowIndex = 1;
 
 function block() {
-  if (!(this instanceof block)) return new block();
+  if (!(this instanceof block))
+    return new block();
   this.columnIndex = exports.columnIndex;
   this.rowIndex = exports.rowIndex;
   this.parentIndex = null;
@@ -241,11 +267,13 @@ function block() {
 
   var _this = this;
   this.getData = function() {
-    if (_this.index == null || _this.length == null) return list[this.type];
+    if (_this.index == null || _this.length == null)
+      return list[this.type];
 
-    if (_this.newName) return _this.newName;
+    if (_this.newName)
+      return _this.newName;
 
-    return exports.code.substr(_this.index-1, _this.length);
+    return exports.code.substr(_this.index - 1, _this.length);
   };
 
   this.findType = function() {
@@ -271,7 +299,8 @@ function block() {
     } else {
       var prev = _this.getPreviousBlock();
 
-      if (prev && (prev.type.indexOf("SET_VARIABLE_") === 0 || prev.type == "FUNCTION")) {
+      if (prev
+        && (prev.type.indexOf("SET_VARIABLE_") === 0 || prev.type == "FUNCTION")) {
         if (_this.parent) {
           _this.parent.variables[str] = {};
         }
@@ -289,18 +318,33 @@ function block() {
   };
 
   this.isProperty = function() {
-    if (_this.type != "WORD") return false;
+    if (_this.type != "WORD")
+      return false;
 
     var bl = _this.getPreviousBlock();
 
-    if (bl && bl.delimiter == ".") return true;
-
-    if (bl && bl.delimiter == ":") return false;
+    if (bl) {
+      if (bl.delimiter == ".")
+        return true;
+      if (bl.delimiter == ":")
+        return false;
+      if (signs.hasOwnProperty(bl.delimiter) && bl.delimiter != ",")
+        return false;
+      if (bl.delimiter == ",") {
+        var nbl = _this.getNextBlock();
+        return (nbl && nbl.delimiter == ":");
+      }
+    }
 
     if (_this.parent) {
       var type = _this.parent.findType();
 
-      if (type == "object") return true;
+      if (type == "object")
+        return true;
+
+      var nbl = _this.getNextBlock();
+      if (nbl && nbl.delimiter == ":")
+        return true;
     }
 
     return false;
@@ -314,11 +358,13 @@ function block() {
   // --> returns undefined if
   // a - no item
   this.getPreviousBlock = function(dont_skip) {
-    if (!_this.parent || _this.parentIndex === null || _this.parentIndex === 0) return;
+    if (!_this.parent || _this.parentIndex === null || _this.parentIndex === 0)
+      return;
 
     var bl = _this.parent.subs;
     for (var i = _this.parentIndex - 1; i >= 0; i--) {
-      if (!dont_skip && exports.noCode[bl[i].type]) continue;
+      if (!dont_skip && exports.noCode[bl[i].type])
+        continue;
       return bl[i];
     }
   };
@@ -328,11 +374,14 @@ function block() {
   // a - no item
   this.getNextBlock = function(dont_skip) {
     var ln = _this.parent.subs.length - 1;
-    if (!_this.parent || _this.parentIndex === null || _this.parentIndex + 1 > ln) return;
+    if (!_this.parent || _this.parentIndex === null
+      || _this.parentIndex + 1 > ln)
+      return;
 
     var bl = _this.parent.subs;
     for (var i = _this.parentIndex + 1; i <= ln; i++) {
-      if (!dont_skip && exports.noCode[bl[i].type]) continue;
+      if (!dont_skip && exports.noCode[bl[i].type])
+        continue;
       return bl[i];
     }
   }
