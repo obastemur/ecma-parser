@@ -1,8 +1,10 @@
+#!/usr/bin/env jx
 /*
  * The MIT License (MIT)
  * Copyright (c) 2015 Oguz Bastemur
  */
 
+var fs = require('fs');
 var parser = require('./parser');
 
 function cleanInstruction(blocks_, instruction, keep_row_index) {
@@ -18,14 +20,14 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
     if (sub.type == instruction) {
       if (instruction == "SPACE") {
         var prev = sub.getPreviousBlock(true);
-        if (!prev || parser.signs[prev.type] || prev.type == "SPACE"
-          || prev.type == "NEW_LINE") {
+        if (!prev || parser.signs[prev.type] || prev.type == "SPACE" ||
+          prev.type == "NEW_LINE") {
           continue;
         }
 
         var next = sub.getNextBlock(true);
-        if (!next || parser.signs[next.type] || prev.type == "SPACE"
-          || next.type == "NEW_LINE") {
+        if (!next || parser.signs[next.type] || prev.type == "SPACE" ||
+          next.type == "NEW_LINE") {
           continue;
         }
 
@@ -44,12 +46,12 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
           sub.repeats = data.split('\n').length - (minus ? 1 : 0);
         }
 
-        if (minus || !keep_row_index) { // skip adding new line. comment is on
+        if (minus || !keep_row_index) {  // skip adding new line. comment is on
           // the same line
           continue;
         }
 
-        sub.length = null; // we want delimiter to return
+        sub.length = null;  // we want delimiter to return
         sub.type = "NEW_LINE";
         sub.delimiter = "\n";
       } else if (instruction == "NEW_LINE") {
@@ -65,7 +67,7 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
         sub.type = "SPACE";
         sub.delimiter = " ";
         sub.length = 1;
-        sub.index = null; // override original text from index
+        sub.index = null;  // override original text from index
       } else {
         continue;
       }
@@ -109,11 +111,16 @@ function cleanTabs(blocks_) {
 }
 
 var dict_special = "$";
-var dict_letters = "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
+var dict_letters =
+  "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
 var dl_count = dict_letters.length;
 var dl_count_2 = dl_count * dl_count;
-var letter_div = [ dl_count, dl_count * dl_count, dl_count * dl_count_2,
-  dl_count_2 * dl_count_2 ];
+var letter_div = [
+  dl_count,
+  dl_count * dl_count,
+  dl_count * dl_count_2,
+  dl_count_2 * dl_count_2
+];
 var name_counter = 0, dict_min = {};
 
 function setNodeGlobals() {
@@ -139,8 +146,7 @@ function generateName() {
   var name = "";
 
   for (var i = 0; i < 4; i++) {
-    if (name_counter < letter_div[i])
-      break;
+    if (name_counter < letter_div[i]) break;
 
     // mod on next limit
     var base = parseInt(name_counter / letter_div[i]) - 1;
@@ -165,8 +171,8 @@ function minimizeNames(blocks_) {
     var sub = bl[i];
     if (sub.type == "WORD") {
       var updateName = (sub.isNewDefinition() || !sub.isProperty());
-      updateName = updateName && sub.dataType != "number"
-      && sub.dataType != "boolean";
+      updateName =
+        updateName && sub.dataType != "number" && sub.dataType != "boolean";
 
       if (updateName) {
         var name = sub.getData();
@@ -231,6 +237,24 @@ exports.minimize = function(filename, code, keep_row_index) {
   return parser.blockToCode(res);
 };
 
-exports.getNameMap = function() {
-  return dict_min;
-};
+exports.getNameMap = function() { return dict_min; };
+
+if (process.argv[1] == __filename) {
+  var log = jxcore.utils.console.log;
+  if (process.argv.length < 3) {
+
+    log("usage:");
+    log("minimize <input_file.js> <optional output.js>", "blue");
+
+    console.log();
+    process.exit();
+  }
+
+  if (process.argv[3])
+    fs.writeFileSync(process.argv[3],
+      exports.minimize(process.argv[2],
+        fs.readFileSync(process.argv[2]), false));
+  else
+    console.log(exports.minimize(process.argv[2],
+      fs.readFileSync(process.argv[2]), false));
+}

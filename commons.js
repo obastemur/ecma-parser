@@ -4,8 +4,7 @@
  */
 
 var ASSERT = function(cond, message) {
-  if (!cond)
-    throw new Error(message);
+  if (!cond) throw new Error(message);
 };
 
 var types = {
@@ -29,7 +28,7 @@ var types = {
   "function" : "FUNCTION",
   "=>" : "ARROW_FUNCTION",
   "{" : "SCOPE",
-  "}" : "SCOPE_END", // skip only
+  "}" : "SCOPE_END",  // skip only
   ":" : "COLON",
   ";" : "SEMI_COLON",
   "+" : "PLUS",
@@ -142,7 +141,7 @@ var signs = {
   "/=" : "DIV_EQUAL",
   "|=" : "MOD_EQUAL",
   "{" : "SCOPE",
-  "}" : "SCOPE_END", // skip only
+  "}" : "SCOPE_END",  // skip only
   ":" : "COLON",
   ";" : "SEMI_COLON",
   "+" : "PLUS",
@@ -255,8 +254,7 @@ exports.columnIndex = 1;
 exports.rowIndex = 1;
 
 function block() {
-  if (!(this instanceof block))
-    return new block();
+  if (!(this instanceof block)) return new block();
   this.columnIndex = exports.columnIndex;
   this.rowIndex = exports.rowIndex;
   this.parentIndex = null;
@@ -272,18 +270,15 @@ function block() {
 
   var _this = this;
   this.getData = function() {
-    if (_this.index == null || _this.length == null)
-      return list[this.type];
+    if (_this.index == null || _this.length == null) return list[this.type];
 
-    if (_this.newName)
-      return _this.newName;
+    if (_this.newName) return _this.newName;
 
     return exports.code.substr(_this.index - 1, _this.length);
   };
 
   this.findType = function() {
-    if (_this._dataTypeFound)
-      return _this.dataType;
+    if (_this._dataTypeFound) return _this.dataType;
 
     var str = _this.getData();
     _this._dataTypeFound = true;
@@ -315,8 +310,7 @@ function block() {
         // check param1 in -> function ?? (param1
         if (prev.type == "PTS_OPEN") {
           var ptmp = prev.getPreviousBlock();
-          if (ptmp && ptmp.type == "WORD")
-            ptmp = ptmp.getPreviousBlock();
+          if (ptmp && ptmp.type == "WORD") ptmp = ptmp.getPreviousBlock();
 
           if (ptmp && ptmp.type == "FUNCTION") {
             if (_this.parent) {
@@ -335,8 +329,7 @@ function block() {
             // check y in -> var x = 3, y..
             while (ptmp) {
               ptmp = ptmp.getPreviousBlock();
-              if (!ptmp)
-                break;
+              if (!ptmp) break;
 
               if (ptmp.type.indexOf("SET_VARIABLE_") === 0) {
                 pass = true;
@@ -352,8 +345,7 @@ function block() {
               }
 
               // prevent q being caught at -> for(;;i++, q++)
-              if (ptmp.delimiter == ";")
-                break;
+              if (ptmp.delimiter == ";") break;
             }
           }
           if (ptmp && pass) {
@@ -361,8 +353,7 @@ function block() {
             // check if it's function argument or new variable
             while (ptmp) {
               ptmp = ptmp.getPreviousBlock();
-              if (!ptmp)
-                break;
+              if (!ptmp) break;
 
               // any of the below shouldn't happen!
               ASSERT(
@@ -370,10 +361,8 @@ function block() {
                 ptmp.delimiter == ";"),
                 "TYPE_CHECK: at this point delimiter shouldn't be :, }, or ;");
 
-              if (ptmp.type == "JS_FOR")
-                break;
-              if (ptmp.type == "EQUALS")
-                break;
+              if (ptmp.type == "JS_FOR") break;
+              if (ptmp.type == "EQUALS") break;
               if (ptmp.type == "FUNCTION") {
                 is_arg = true;
                 break;
@@ -399,16 +388,13 @@ function block() {
   };
 
   this.isProperty = function() {
-    if (_this.type != "WORD")
-      return false;
+    if (_this.type != "WORD") return false;
 
     var bl = _this.getPreviousBlock();
 
     if (bl) {
-      if (bl.delimiter == ".")
-        return true;
-      if (bl.delimiter == ":")
-        return false;
+      if (bl.delimiter == ".") return true;
+      if (bl.delimiter == ":") return false;
       if (signs.hasOwnProperty(bl.delimiter) && bl.delimiter != ",")
         return false;
       if (bl.delimiter == ",") {
@@ -420,12 +406,10 @@ function block() {
     if (_this.parent) {
       var type = _this.parent.findType();
 
-      if (type == "object")
-        return true;
+      if (type == "object") return true;
 
       var nbl = _this.getNextBlock();
-      if (nbl && nbl.delimiter == ":")
-        return true;
+      if (nbl && nbl.delimiter == ":") return true;
     }
 
     return false;
@@ -442,8 +426,7 @@ function block() {
 
     var bl = _this.parent.subs;
     for (var i = _this.parentIndex - 1; i >= 0; i--) {
-      if (!dont_skip && exports.noCode[bl[i].type])
-        continue;
+      if (!dont_skip && exports.noCode[bl[i].type]) continue;
       return bl[i];
     }
   };
@@ -459,8 +442,7 @@ function block() {
 
     var bl = _this.parent.subs;
     for (var i = _this.parentIndex + 1; i <= ln; i++) {
-      if (!dont_skip && exports.noCode[bl[i].type])
-        continue;
+      if (!dont_skip && exports.noCode[bl[i].type]) continue;
       return bl[i];
     }
   }
