@@ -1,7 +1,7 @@
 var minz = require('../minimize');
 var fs = require('fs');
 
-var code = fs.readFileSync('./jquery-2.1.4.js') + "";
+var code = fs.readFileSync('./js_files/jquery-2.1.4.js');
 code = minz.minimize("jq.js", code, false);
 
 fs.writeFileSync('./jq_tmp.js', code);
