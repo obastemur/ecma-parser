@@ -472,6 +472,7 @@ function next(pchar, char, nchar, index, skip_activeBlock) {
 }
 
 exports.parse = function(filename, code) {
+  // make sure not using Buffer
   commons.code = code + "";
 
   commons.rowIndex = 1;

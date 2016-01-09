@@ -3,6 +3,11 @@
  * Copyright (c) 2015 Oguz Bastemur
  */
 
+var ASSERT = function(cond, message) {
+  if (!cond)
+    throw new Error(message);
+};
+
 var types = {
   "++" : "INCREMENT",
   "--" : "DECREASE",
@@ -174,7 +179,7 @@ var signs = {
 
 var reverse_signs = {};
 
-for ( var o in types) {
+for (var o in types) {
   if (!signs.hasOwnProperty(o)) {
     continue;
   }
@@ -234,7 +239,7 @@ exports.types = types;
 
 var list = {};
 
-for ( var o in types) {
+for (var o in types) {
   if (!types.hasOwnProperty(o)) {
     continue;
   }
@@ -299,15 +304,91 @@ function block() {
     } else {
       var prev = _this.getPreviousBlock();
 
-      if (prev
-        && (prev.type.indexOf("SET_VARIABLE_") === 0 || prev.type == "FUNCTION")) {
+      if (prev && (prev.type.indexOf("SET_VARIABLE_") === 0 ||
+        prev.type == "FUNCTION")) {
         if (_this.parent) {
-          _this.parent.variables[str] = {};
+          _this.parent.variables[str] = prev.type == "FUNCTION" ? {function_name: true} : {};
         }
         _this.dataType = "new_variable";
-      } else {
-        _this.dataType = "unknown";
+        return _this.dataType;
+      } else if (prev) {
+        // check param1 in -> function ?? (param1
+        if (prev.type == "PTS_OPEN") {
+          var ptmp = prev.getPreviousBlock();
+          if (ptmp && ptmp.type == "WORD")
+            ptmp = ptmp.getPreviousBlock();
+
+          if (ptmp && ptmp.type == "FUNCTION") {
+            if (_this.parent) {
+              _this.parent.variables[str] = {
+                argument_name : true
+              };
+            }
+            _this.dataType = "new_variable";
+            return _this.dataType;
+          }
+        } else if (prev.type == "COMMA") {
+          var ptmp = prev.getPreviousBlock();
+          var pass = ptmp && ptmp.isNewDefinition();
+
+          if (!pass) {
+            // check y in -> var x = 3, y..
+            while (ptmp) {
+              ptmp = ptmp.getPreviousBlock();
+              if (!ptmp)
+                break;
+
+              if (ptmp.type.indexOf("SET_VARIABLE_") === 0) {
+                pass = true;
+                break;
+              }
+
+              // do we need to check this ?
+              // TODO remove this?
+              if (ptmp.type == "FUNCTION") {
+                is_arg = true;
+                pass = true;
+                break;
+              }
+
+              // prevent q being caught at -> for(;;i++, q++)
+              if (ptmp.delimiter == ";")
+                break;
+            }
+          }
+          if (ptmp && pass) {
+            var is_arg = false;
+            // check if it's function argument or new variable
+            while (ptmp) {
+              ptmp = ptmp.getPreviousBlock();
+              if (!ptmp)
+                break;
+
+              // any of the below shouldn't happen!
+              ASSERT(
+                !(ptmp.delimiter == ":" || ptmp.delimiter == "}" ||
+                ptmp.delimiter == ";"),
+                "TYPE_CHECK: at this point delimiter shouldn't be :, }, or ;");
+
+              if (ptmp.type == "JS_FOR")
+                break;
+              if (ptmp.type == "EQUALS")
+                break;
+              if (ptmp.type == "FUNCTION") {
+                is_arg = true;
+                break;
+              }
+            }
+
+            if (_this.parent) {
+              _this.parent.variables[str] = is_arg ? {argument_name: true} : {};
+            }
+            _this.dataType = "new_variable";
+            return _this.dataType;
+          }
+        }
       }
+      _this.dataType = "unknown";
     }
 
     return _this.dataType;
@@ -350,9 +431,7 @@ function block() {
     return false;
   };
 
-  this.updateName = function(name) {
-    _this.newName = name;
-  };
+  this.updateName = function(name) { _this.newName = name; };
 
   // returns none space etc previous item
   // --> returns undefined if
@@ -374,8 +453,8 @@ function block() {
   // a - no item
   this.getNextBlock = function(dont_skip) {
     var ln = _this.parent.subs.length - 1;
-    if (!_this.parent || _this.parentIndex === null
-      || _this.parentIndex + 1 > ln)
+    if (!_this.parent || _this.parentIndex === null ||
+      _this.parentIndex + 1 > ln)
       return;
 
     var bl = _this.parent.subs;
