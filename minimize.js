@@ -5,7 +5,52 @@
  */
 
 var fs = require('fs');
-var parser = require('./parser');
+var parser = require('./lexer');
+
+var string_allowed_next = {
+  ":":1,
+  ")":1,
+  "}":1,
+  "]":1,
+  ";":1,
+  ",":1,
+  ".":1,
+  "+":1,
+  "==":1,
+  "!=":1,
+  "||":1,
+  "&&":1
+};
+
+var word_allowed_next = {
+  "[":1,
+  "{":1,
+  "(":1,
+  "+":1,
+  ",":1,
+  ".":1,
+  "!":1,
+  "=":1,
+  "|":1,
+  "||":1,
+  "&&":1,
+  "?":1,
+  ":":1
+};
+
+var string_allowed_pre = {
+  "+":1,
+  "(":1,
+  "{":1,
+  "[":1,
+  ":":1,
+  ",":1,
+  "?":1,
+  "=":1,
+  "|":1,
+  "||":1,
+  "&&":1
+};
 
 function cleanInstruction(blocks_, instruction, keep_row_index) {
   if (!blocks_.subs || !blocks_.subs || !blocks_.subs.length) {
@@ -55,19 +100,57 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
         sub.type = "NEW_LINE";
         sub.delimiter = "\n";
       } else if (instruction == "NEW_LINE") {
-        var prev = sub.getPreviousBlock(true);
-        if (!prev || parser.signs[prev.type] || prev.type == "SPACE") {
-          continue;
-        }
-        var next = sub.getNextBlock(true);
-        if (!next || parser.signs[next.type] || next.type == "SPACE") {
+        var prev = sub.getPreviousBlock();
+        var next = sub.getNextBlock();
+        var nn = next ? next.getNextBlock() : null;
+
+        if (!prev || prev.delimiter == ";" || !next || next.delimiter == ";") {
           continue;
         }
 
-        sub.type = "SPACE";
-        sub.delimiter = " ";
-        sub.length = 1;
-        sub.index = null;  // override original text from index
+        if (prev.type == "STRING") {
+          if (string_allowed_next.hasOwnProperty(next.delimiter))
+            continue;
+
+          if (nn && string_allowed_next.hasOwnProperty(nn.delimiter + next.delimiter))
+            continue;
+        }
+
+        if (next.type == "STRING") {
+          if (string_allowed_pre.hasOwnProperty(prev.delimiter))
+            continue;
+        }
+
+        var semi = (prev.type == "STRING" || next.type == "STRING");
+        if (!semi) {
+          if (next.isWordish()) {
+            if (!word_allowed_next.hasOwnProperty(prev.delimiter)) {
+              // skip `} catch` exception
+              if (prev.delimiter == "}" && next.type == "JS_CATCH") {
+                continue;
+              }
+
+              // check `var x` or `function func()`
+              if (!(prev.type.indexOf("JS_")===0 && next.type == "WORD")) {
+                semi = true;
+              }
+            } else {
+              continue;
+            }
+          }
+        }
+
+        if (semi) {
+          sub.type = "SEMI_COLON";
+          sub.delimiter = ";";
+          sub.length = 1;
+          sub.index = null;  // override original text from index
+        } else {
+          sub.type = "SPACE";
+          sub.delimiter = " ";
+          sub.length = 1;
+          sub.index = null;  // override original text from index
+        }
       } else {
         continue;
       }
@@ -188,7 +271,7 @@ function minimizeNames(blocks_) {
         // it was either < 2 or reserved
         // or it was a sub property of an object
         // we do not minimize sub prop. names
-        if (pbl && pbl.type == "FUNCTION") {
+        if (pbl && pbl.type == "JS_FUNCTION") {
           pbl = pbl.getPreviousBlock();
           if (pbl && pbl.delimiter == "=") {
             pbl = pbl.getPreviousBlock();
@@ -225,12 +308,11 @@ exports.minimize = function(filename, code, keep_row_index) {
 
   cleanTabs(res, keep_row_index);
   cleanInstruction(res, "COMMENT", keep_row_index);
+  cleanInstruction(res, "SPACE", keep_row_index);
 
   if (!keep_row_index) {
     cleanInstruction(res, "NEW_LINE", keep_row_index);
   }
-
-  cleanInstruction(res, "SPACE", keep_row_index);
 
   minimizeNames(res);
 
@@ -240,6 +322,7 @@ exports.minimize = function(filename, code, keep_row_index) {
 exports.getNameMap = function() { return dict_min; };
 
 if (process.argv[1] == __filename) {
+  parser.errorsAsWarning = true;
   var log = jxcore.utils.console.log;
   if (process.argv.length < 3) {
 
@@ -250,11 +333,17 @@ if (process.argv[1] == __filename) {
     process.exit();
   }
 
-  if (process.argv[3])
-    fs.writeFileSync(process.argv[3],
-      exports.minimize(process.argv[2],
+  try {
+    if (process.argv[3])
+      fs.writeFileSync(process.argv[3],
+        exports.minimize(process.argv[2],
+          fs.readFileSync(process.argv[2]), false));
+    else
+      console.log(exports.minimize(process.argv[2],
         fs.readFileSync(process.argv[2]), false));
-  else
-    console.log(exports.minimize(process.argv[2],
-      fs.readFileSync(process.argv[2]), false));
+    
+    log(process.argv[2], "successfully minimized", "green");
+  } catch (e) {
+    log ("FILE:", process.argv[2], "failed", "red");
+  }
 }

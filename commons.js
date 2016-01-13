@@ -4,7 +4,8 @@
  */
 
 var ASSERT = function(cond, message) {
-  if (!cond) throw new Error(message);
+  if (!cond)
+    throw new Error(message);
 };
 
 var types = {
@@ -25,7 +26,7 @@ var types = {
   "'" : "STRING",
   "//" : "COMMENT",
   "/*" : "COMMENT",
-  "function" : "FUNCTION",
+  "function" : "JS_FUNCTION",
   "=>" : "ARROW_FUNCTION",
   "{" : "SCOPE",
   "}" : "SCOPE_END",  // skip only
@@ -75,9 +76,9 @@ var types = {
   "typeof" : "JS_TYPEOF",
   "instanceof" : "JS_INSTANCEOF",
   "\t" : "TAB",
-  "var" : "SET_VARIABLE_VAR",
-  "let" : "SET_VARIABLE_LET",
-  "const" : "SET_VARIABLE_CONST",
+  "var" : "JS_VARIABLE_VAR",
+  "let" : "JS_VARIABLE_LET",
+  "const" : "JS_VARIABLE_CONST",
   "?" : "LINER_IF",
   "Date" : "JS_DATE",
   "this" : "JS_THIS",
@@ -125,8 +126,8 @@ var types = {
   "encodeURI" : "JS_ENCODE_URI",
   "encodeURIComponent" : "JS_ENCODE_URI_COMPONENT",
   "debugger" : "JS_DEBUGGER",
-  "export" : "export",
-  "import" : "import",
+  "export" : "JS_EXPORT",
+  "import" : "JS_IMPORT",
   "in" : "JS_IN",
   "with" : "JS_WITH",
   "yield" : "JS_YIELD"
@@ -185,40 +186,8 @@ for (var o in types) {
   reverse_signs[signs[o]] = o;
 }
 
-exports.signs = reverse_signs;
-
-exports.prexp = {
-  "COMMA" : ",",
-  "MOD" : "|",
-  "NOT" : "!",
-  "OR" : "||",
-  "AND" : "&&",
-  "SEMI_COLON" : ";",
-  "EQUALS" : "=",
-  "PTS_OPEN" : "(",
-  "COLON" : ":",
-  "PLUS_EQUAL" : "+=",
-  "MULTIPLY_EQUAL" : "*=",
-  "MINUS_EQUAL" : "-=",
-  "DIV_EQUAL" : "/=",
-  "MOD_EQUAL" : "|=",
-  "ARRAY_OPEN" : "[",
-  "IF_EQUALS" : "==",
-  "IF_STRONG_EQUALS" : "===",
-  "IF_DIFFERENT" : "!=",
-  "IF_STRONG_DIFFERENT" : "!==",
-  "LOWER_THAN" : "<",
-  "LOWER_THAN_EQUAL" : "<=",
-  "BIGGER_THAN" : ">",
-  "BIGGER_THAN_EQUAL" : ">=",
-  "RETURN" : "return",
-  "LINER_IF" : "?",
-  "ELSE" : "else",
-  "PLUS" : "+",
-  "MINUS" : "-",
-  "MULTIPLY" : "*",
-  "PERCENTAGE" : "%"
-};
+exports.signs = signs;
+exports.reverse_signs = reverse_signs;
 
 exports.headlessScopes = {
   "IF" : "if",
@@ -270,121 +239,21 @@ function block() {
 
   var _this = this;
   this.getData = function() {
-    if (_this.index == null || _this.length == null) return list[this.type];
+    if (_this.newData) return _this.newData;
 
-    if (_this.newName) return _this.newName;
-
-    return exports.code.substr(_this.index - 1, _this.length);
+    return exports.code.substr(_this.startIndex, (_this.endIndex - _this.startIndex) + 1);
   };
 
   this.findType = function() {
-    if (_this._dataTypeFound) return _this.dataType;
 
-    var str = _this.getData();
-    _this._dataTypeFound = true;
+  };
 
-    if (str) {
-      str = str.trim();
-    } else {
-      _this.dataType = 'undefined';
-      return _this.dataType;
-    }
-
-    if (str == 'null') {
-      _this.dataType = 'null';
-    } else if (str == 'true' || str == 'false')
-      _this.dataType = 'boolean';
-    else if (!isNaN(parseInt(str)) || !isNaN(parseFloat(str))) {
-      _this.dataType = "number";
-    } else {
-      var prev = _this.getPreviousBlock();
-
-      if (prev && (prev.type.indexOf("SET_VARIABLE_") === 0 ||
-        prev.type == "FUNCTION")) {
-        if (_this.parent) {
-          _this.parent.variables[str] = prev.type == "FUNCTION" ? {function_name: true} : {};
-        }
-        _this.dataType = "new_variable";
-        return _this.dataType;
-      } else if (prev) {
-        // check param1 in -> function ?? (param1
-        if (prev.type == "PTS_OPEN") {
-          var ptmp = prev.getPreviousBlock();
-          if (ptmp && ptmp.type == "WORD") ptmp = ptmp.getPreviousBlock();
-
-          if (ptmp && ptmp.type == "FUNCTION") {
-            if (_this.parent) {
-              _this.parent.variables[str] = {
-                argument_name : true
-              };
-            }
-            _this.dataType = "new_variable";
-            return _this.dataType;
-          }
-        } else if (prev.type == "COMMA") {
-          var ptmp = prev.getPreviousBlock();
-          var pass = ptmp && ptmp.isNewDefinition();
-
-          if (!pass) {
-            // check y in -> var x = 3, y..
-            while (ptmp) {
-              ptmp = ptmp.getPreviousBlock();
-              if (!ptmp) break;
-
-              if (ptmp.type.indexOf("SET_VARIABLE_") === 0) {
-                pass = true;
-                break;
-              }
-
-              // do we need to check this ?
-              // TODO remove this?
-              if (ptmp.type == "FUNCTION") {
-                is_arg = true;
-                pass = true;
-                break;
-              }
-
-              // prevent q being caught at -> for(;;i++, q++)
-              if (ptmp.delimiter == ";") break;
-            }
-          }
-          if (ptmp && pass) {
-            var is_arg = false;
-            // check if it's function argument or new variable
-            while (ptmp) {
-              ptmp = ptmp.getPreviousBlock();
-              if (!ptmp) break;
-
-              // any of the below shouldn't happen!
-              ASSERT(
-                !(ptmp.delimiter == ":" || ptmp.delimiter == "}" ||
-                ptmp.delimiter == ";"),
-                "TYPE_CHECK: at this point delimiter shouldn't be :, }, or ;");
-
-              if (ptmp.type == "JS_FOR") break;
-              if (ptmp.type == "EQUALS") break;
-              if (ptmp.type == "FUNCTION") {
-                is_arg = true;
-                break;
-              }
-            }
-
-            if (_this.parent) {
-              _this.parent.variables[str] = is_arg ? {argument_name: true} : {};
-            }
-            _this.dataType = "new_variable";
-            return _this.dataType;
-          }
-        }
-      }
-      _this.dataType = "unknown";
-    }
-
-    return _this.dataType;
+  this.isWordish = function() {
+    return (_this.type == "WORD" || _this.type.indexOf("JS_") == 0);
   };
 
   this.isNewDefinition = function() {
-    return _this.dataType == "new_variable";
+    return _this.findType() == "new_variable";
   };
 
   this.isProperty = function() {
@@ -415,7 +284,7 @@ function block() {
     return false;
   };
 
-  this.updateName = function(name) { _this.newName = name; };
+  this.forceData = function(data) { _this.newData = data; };
 
   // returns none space etc previous item
   // --> returns undefined if

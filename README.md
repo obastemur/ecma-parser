@@ -1,6 +1,6 @@
 ### Ecmascript Parser
 
-Ecmascript instruction parser. Tested on popular Javascript modules (i.e. JQuery)
+Ecmascript instruction parser (Lexical, Syntactical) . Tested on popular Javascript files (i.e. JQuery)
 
 ### How it works
 
@@ -12,10 +12,11 @@ Ecmascript instruction parser. Tested on popular Javascript modules (i.e. JQuery
 var parser = require('ecma-parser');
 
 var js_code = "\
-  var x = 1;\
-  var y = 2;\
-  console.log(x + y);\
-";
+var x = 1;\n\
+var y = 2;\n\
+{\n\
+  console.log(x + y);\n\
+}";
 
 var bl = parser.parse("test.js", js_code);
 parser.printBlocks(bl);
@@ -23,37 +24,43 @@ parser.printBlocks(bl);
 
 #### Output:
 ```
----> ROOT { x: {}, y: {} }
-SPACE (1:1)
-SET_VARIABLE 1:3
-SPACE (1:6)
-WORD: x (new_variable) (1:7)
-SPACE (1:8)
-EQUALS (1:9)
-SPACE (1:10)
-WORD: 1 (number) (1:11)
-SEMI_COLON (1:12)
-SPACE (1:13)
-SET_VARIABLE 1:15
-SPACE (1:18)
-WORD: y (new_variable) (1:19)
-SPACE (1:20)
-EQUALS (1:21)
-SPACE (1:22)
-WORD: 2 (number) (1:23)
-SEMI_COLON (1:24)
-SPACE (1:25)
-WORD: console (1:27)
-DOT (1:34)
-WORD: log (1:35)
-PTS_OPEN (1:38)
-WORD: x (1:39)
-SPACE (1:40)
-PLUS (1:41)
-SPACE (1:42)
-WORD: y (1:43)
-PTS_CLOSE (1:44)
-SEMI_COLON (1:45)
+---> ROOT
+JS_VARIABLE_VAR 0:0 var
+SPACE 0:3
+WORD 0:4 x
+SPACE 0:5
+EQUALS 0:6
+SPACE 0:7
+NUMBER 0:8 1
+SEMI_COLON 0:9
+NEW_LINE 0:10
+JS_VARIABLE_VAR 1:0 var
+SPACE 1:3
+WORD 1:4 y
+SPACE 1:5
+EQUALS 1:6
+SPACE 1:7
+NUMBER 1:8 2
+SEMI_COLON 1:9
+NEW_LINE 1:10
+SCOPE 2:0
+    ---> SCOPE
+    NEW_LINE 2:1
+    SPACE 3:0
+    WORD 3:2 console
+    DOT 3:9
+    WORD 3:10 log
+    PTS_OPEN 3:13
+        ---> PTS_OPEN
+        WORD 3:14 x
+        SPACE 3:15
+        PLUS 3:16
+        SPACE 3:17
+        WORD 3:18 y
+    <--- PTS_OPEN
+    SEMI_COLON 3:20
+    NEW_LINE 3:21
+<--- SCOPE
 ```
 
 ### API
@@ -69,13 +76,11 @@ Return source code for the instruction block
 
 #### Blocks
 `.variables` : Scope variables  
-`.subs` : Array of sub instructions or blocks  
+`.subs` : Array of the items from a scope -> {}, [], ()
 `.type` : Instruction type  
-`.index` : Instruction start index  
-`.length` : Length of instruction  
-`.repeats` : If `true`, delimiter should repeat on output `.length` times  
-`.delimiter` : Instruction identifier  
-`.dataType` : Data type of the instruction block  
+`.startIndex` : Instruction start index [on the file]
+`.endIndex` : Instruction end index [on the file]
+`.delimiter` : Instruction identifier
 `.rowIndex` : Row index of the instruction  
 `.columnIndex` : Column index of the instruction  
 `.getData()` : Get the string data from the instruction (name of the variable for WORDs)  

@@ -1,12 +1,11 @@
-var parser = require('ecma-parser');
+var parser = require('../parser');
 
 var js_code = "\
-  var x = 1;\
-  var y = 2;\
-  {\
-    console.log(x + y);\
-  }\
-";
+var x = 1;\n\
+var y = 2;\n\
+{\n\
+  console.log(x + y);\n\
+}";
 
 var bl = parser.parse("test.js", js_code);
-parser.printBlocks(bl.subs[bl.subs.length - 2]);
+parser.printBlocks(bl);

@@ -6,27 +6,20 @@
 var assert = require('assert');
 var parser = require('../lexer');
 
-var code = '                      \n\
+var code = '\
 var str = "Hello", q = 1;         \n\
                                   \n\
-var Test = function Test(a, b){   \n\
+var Test = function Test(a, b) {  \n\
   a++;                            \n\
   b++;                            \n\
   return a+b;                     \n\
 }                                 \n\
                                   \n\
-for(var z=1, y=2; z<3; z++, p++); \n\
+for(var z=1, y=2; z<3; z++, p++);\
 ';
-
-var expected = {
-  str: {},
-  q: {},
-  Test: { function_name: true },
-  a: { argument_name: true },
-  b: { argument_name: true },
-  z: {},
-  y: {} };
 
 var bl = parser.parse("basic.js", code);
 
-assert.deepEqual(expected, bl.variables, "NOT MATCHING");
+var new_code = parser.blockToCode(bl);
+
+assert.deepEqual(code, new_code, "NOT MATCHING");
