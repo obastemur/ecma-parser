@@ -455,6 +455,9 @@ var next = function next(pre_char, char, next_char) {
   if (captureSigns(pre_char, char)) return;
 
   newBlock(char, "UNKNOWN_CHAR");
+
+  commons.activeError = new SyntaxError("Unknown char `"+char+"` ("
+    + char.charCodeAt(0) + ") at " + commons.rowIndex + ":" + commons.columnIndex);
 };
 
 exports.parse = function(filename, code) {
