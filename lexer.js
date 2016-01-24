@@ -6,6 +6,7 @@
 var commons = require('./commons');
 var types = commons.types;
 var Block = commons.block;
+var inspectScope = require('./fn').scopeAnalysis;
 var root;  // root block
 
 var captureString = function captureString(delimiter) {
@@ -52,7 +53,7 @@ var captureComment = function captureComment(delimiter) {
   var len = commons.code.length;
   var bl = new Block();
   bl.delimiter = delimiter;
-  bl.type = "JS_COMMENT";
+  bl.type = "COMMENT";
   bl.columnIndex = commons.columnIndex;
   bl.rowIndex = commons.rowIndex;
   bl.startIndex = commons.activeIndex;
@@ -224,6 +225,7 @@ Scope.check = function check(char) {
       if (scope.scoping[close_scope[char]] == 0) {
         // close scope
         scope.block.endIndex = commons.activeIndex;
+        inspectScope(commons.activeBlock);
         commons.activeBlock = scope.block.parent;
       }
 

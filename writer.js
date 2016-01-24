@@ -3,6 +3,17 @@
  * Copyright (c) 2015 Oguz Bastemur
  */
 
+var commons = require('./commons');
+
+var scopeString = function(num) {
+  for(var o in commons.scopeTypes) {
+    if (commons.scopeTypes[o] === num)
+      return o;
+  }
+
+  return "????";
+};
+
 var colors = ['green', 'yellow'];
 var printBlocks = function (bl, depth) {
   if (!depth) {
@@ -10,9 +21,10 @@ var printBlocks = function (bl, depth) {
   }
 
   var type_ = bl.type;
+  var scopeType = scopeString(bl.scopeType);
   bl = bl.subs;
 
-  console.log(depth + "--->", type_);
+  console.log(depth + "--->", type_, "(" + scopeType + ")");
   for (var i = 0; i < bl.length; i++) {
     var clr = colors[i % 2];
     type_ = bl[i].type;
@@ -23,9 +35,6 @@ var printBlocks = function (bl, depth) {
     if (bl[i].subs && bl[i].subs.length) {
       printBlocks(bl[i], depth + "    ");
       console.log(depth + "<---", type_);
-    } else if (bl[i].scope) {
-      console.log(depth + "    --->", type_);
-      console.log(depth + "    <---", type_);
     }
   }
 };
@@ -41,8 +50,11 @@ function write(filename, block) {
     if (block[i].subs.length || block[i].scope) {
       arr.push(block[i].delimiter);
 
-      if (block[i].subs.length)
+      if (block[i].subs.length) {
+       // arr.push("// --> " + scopeString( block[i].scopeType ) + "\n");
+
         write(filename, block[i].subs);
+      }
 
       var close_scope = {
         "{" : "}",
