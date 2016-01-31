@@ -1,3 +1,8 @@
+/*
+ * The MIT License (MIT)
+ * Copyright (c) 2015 Oguz Bastemur
+ */
+
 var minz = require('../minimize');
 var fs = require('fs');
 

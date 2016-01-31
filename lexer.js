@@ -7,20 +7,32 @@ var commons = require('./commons');
 var types = commons.types;
 var Block = commons.block;
 var inspectScope = require('./fn').scopeAnalysis;
+var inspectVariables = require('./fn').variableAnalysis;
 var root;  // root block
+
+var createBlock = function(delimiter) {
+  var bl = new Block();
+  var tp = types[delimiter];
+  if (tp) {
+    for(var o in tp) {
+      bl[o] = tp[o];
+    }
+  }
+
+  bl.startIndex = commons.activeIndex;
+  bl.delimiter = delimiter;
+  bl.columnIndex = commons.columnIndex;
+  bl.rowIndex = commons.rowIndex;
+  bl.length = 0;
+
+  return bl;
+};
 
 var captureString = function captureString(delimiter) {
   var len = commons.code.length;
-  var bl = new Block();
-  bl.delimiter = delimiter;
-  bl.type = "JS_STRING";
-  bl.columnIndex = commons.columnIndex;
-  bl.rowIndex = commons.rowIndex;
-  bl.startIndex = commons.activeIndex;
-  // bl.endindex = ?;
+  var bl = createBlock(delimiter);
   bl.parent = commons.activeBlock;
   bl.parentIndex = commons.activeBlock.subs.length;
-  bl.length = 0;
   commons.activeBlock.subs.push(bl);
 
   var open = false;
@@ -51,16 +63,9 @@ var captureString = function captureString(delimiter) {
 
 var captureComment = function captureComment(delimiter) {
   var len = commons.code.length;
-  var bl = new Block();
-  bl.delimiter = delimiter;
-  bl.type = "COMMENT";
-  bl.columnIndex = commons.columnIndex;
-  bl.rowIndex = commons.rowIndex;
-  bl.startIndex = commons.activeIndex;
-  // bl.endindex = ?;
+  var bl = createBlock(delimiter);
   bl.parent = commons.activeBlock;
   bl.parentIndex = commons.activeBlock.subs.length;
-  bl.length = 0;
   commons.activeBlock.subs.push(bl);
 
   commons.activeIndex += 2;
@@ -72,14 +77,16 @@ var captureComment = function captureComment(delimiter) {
                  ? commons.code.charAt(commons.activeIndex + 1)
                  : null;
 
-    if (ch == "\n") {
+    var ch_new_line = types.hasOwnProperty(ch) && types[ch].NEW_LINE;
+
+    if (ch_new_line) {
       commons.columnIndex = 0;
       commons.rowIndex++;
     } else {
       commons.columnIndex++;
     }
 
-    if (delimiter == "//" && ch == "\n") {
+    if (delimiter == "//" && ch_new_line) {
       bl.endIndex = commons.activeIndex;
       return;
     }
@@ -106,8 +113,15 @@ var checkWordType = function checkWordType(bl) {
       commons.code.substr(bl.startIndex, (bl.endIndex - bl.startIndex) + 1);
 
   if (types.hasOwnProperty(str)) {
-    bl.type = types[str];
+    var tp = types[str];
+    if (tp) {
+      for(var o in tp) {
+        bl[o] = tp[o];
+      }
+    }
   } else {
+    bl.name = commons.BIT_NAME.WORD;
+
     var parsed = parseFloat(str);
     var number = false;
     if (parsed != 0 && !isNaN(parsed)) {
@@ -115,14 +129,14 @@ var checkWordType = function checkWordType(bl) {
     }
 
     if (!number)
-      if (parsed === 0 && str.replace(/[0]+/g, "").trim().length == 0)
+      if (parsed === 0 && str.replace(/[0]+/g, "").trim().length === 0)
         number = true;
 
-    if (number) bl.type = "NUMBER";
+    if (number) bl.type = commons.BIT_TYPE.NUMBER;
   }
 
   if (!bl.type) {
-    bl.type = "WORD";
+    bl.type = commons.BIT_TYPE.WORD;
   }
 
   bl.delimiter = str;
@@ -130,13 +144,7 @@ var checkWordType = function checkWordType(bl) {
 
 var captureWord = function captureWord(delimiter) {
   var len = commons.code.length;
-  var bl = new Block();
-  bl.delimiter = delimiter;
-  // bl.type = ?;
-  bl.columnIndex = commons.columnIndex;
-  bl.rowIndex = commons.rowIndex;
-  bl.startIndex = commons.activeIndex;
-  // bl.endIndex = ?;
+  var bl = createBlock(delimiter);
   bl.parent = commons.activeBlock;
   bl.parentIndex = commons.activeBlock.subs.length;
   commons.activeBlock.subs.push(bl);
@@ -175,13 +183,8 @@ function Scope(delimiter) {
 
   this.scoping[delimiter] = 1;
 
-  this.block = new Block();
+  this.block = createBlock(delimiter);
   this.block.scope = this;
-  this.block.delimiter = delimiter;
-  this.block.startIndex = commons.activeIndex;
-  this.block.columnIndex = commons.columnIndex;
-  this.block.rowIndex = commons.rowIndex;
-  this.block.type = types[delimiter];
 
   this.block.parent = commons.activeBlock;
   this.block.parentIndex = commons.activeBlock.subs.length;
@@ -234,24 +237,25 @@ Scope.check = function check(char) {
 };
 
 var newBlock = function(char, tp) {
-  var bl = new Block();
-  bl.delimiter = char;
-  bl.type = tp ? tp : types[char];
-  bl.columnIndex = commons.columnIndex;
-  bl.rowIndex = commons.rowIndex;
-  bl.startIndex = commons.activeIndex;
+  var bl = createBlock(char);
   bl.endIndex = commons.activeIndex;
   bl.parent = commons.activeBlock;
   bl.parentIndex = commons.activeBlock.subs.length;
   commons.activeBlock.subs.push(bl);
 };
 
+var isSign = function(char) {
+  if (!types.hasOwnProperty(char) || types[char].type != commons.BIT_TYPE.OPERATOR) return false;
+
+  return true;
+};
+
 var captureSigns = function captureSigns(pre_char, char) {
-  if (!commons.signs.hasOwnProperty(char)) return false;
+  if (!isSign(char)) return false;
 
   var bl;
-  if (commons.signs.hasOwnProperty(pre_char) &&
-      commons.signs.hasOwnProperty((pre_char + char))) {
+  if (isSign(pre_char) &&
+      isSign(pre_char + char)) {
     bl = commons.activeBlock.subs[commons.activeBlock.subs.length - 1];
 
     if (!types.hasOwnProperty(bl.delimiter + char)) {
@@ -263,9 +267,10 @@ var captureSigns = function captureSigns(pre_char, char) {
 
     bl.endIndex = commons.activeIndex;
     bl.delimiter += char;
-    bl.type = types[bl.delimiter];
+    bl.type = types[bl.delimiter].type;
+    bl.name = types[bl.delimiter].name;
   } else {
-    newBlock(char);
+    newBlock(char, types[char]);
   }
 
   return true;
@@ -279,16 +284,16 @@ var captureRegExp = function captureRegExp(prev_char) {
   var is_reg = false;
 
   if (pbl &&
-      (SIDE_CHARS.hasOwnProperty(pbl.delimiter) || pbl.type == "COMMENT"))
+      (types[pbl.delimiter].type == commons.BIT_TYPE.NO_OP || pbl.type == commons.BIT_TYPE.COMMENT))
     pbl = pbl.getPreviousBlock();
 
-  if (!pbl || commons.signs.hasOwnProperty(pbl.delimiter)) {
+  if (!pbl || pbl.type == commons.BIT_TYPE.OPERATOR) {
     is_reg = true;
   }
 
   if (!is_reg && pbl && (
-      commons.reverse_signs.hasOwnProperty(pbl.type) || pbl.type == "ELSE" ||
-      pbl.type == "RETURN")) {
+      pbl.type == commons.BIT_TYPE.OPERATOR || pbl.name == commons.BIT_NAME.JS_ELSE ||
+      pbl.name == commons.BIT_NAME.JS_RETURN)) {
     is_reg = true;
   }
 
@@ -333,9 +338,11 @@ var captureRegExp = function captureRegExp(prev_char) {
       }
     };
 
-    var bl = new Block();
+    var bl = Block();
     bl.delimiter = "/";
-    bl.type = "REGEXP";
+    bl.type = commons.types.REGEXP;
+    bl.name = commons.BIT_NAME.REGEXP_OPERATOR;
+
     bl.columnIndex = commons.columnIndex;
     bl.rowIndex = commons.rowIndex;
     bl.startIndex = commons.activeIndex;
@@ -349,7 +356,8 @@ var captureRegExp = function captureRegExp(prev_char) {
       var ch = commons.code.charAt(commons.activeIndex);
 
       if (!open) {
-        if (ch == "\n") {
+        var ch_new_line = types.hasOwnProperty(ch) && types[ch].NEW_LINE;
+        if (ch_new_line) {
           commons.columnIndex = 0;
           commons.rowIndex++;
           break;
@@ -414,24 +422,17 @@ var captureRegExp = function captureRegExp(prev_char) {
   return false;
 };
 
-var SIDE_CHARS = {
-  "\r" : "R_LINE",
-  " " : "SPACE",
-  "\t" : "TAB",
-  "\n" : "NEW_LINE"
-};
-
 var next = function next(pre_char, char, next_char) {
-  if (SIDE_CHARS.hasOwnProperty(char)) {
+  if (types.hasOwnProperty(char) && types[char].type == commons.BIT_TYPE.NO_OP) {
     var pbl;
 
     if (commons.activeBlock.subs.length)
       pbl = commons.activeBlock.subs[commons.activeBlock.subs.length - 1];
 
-    if (pbl && pbl.type == SIDE_CHARS[char]) {
+    if (pbl && pbl.name == types[char].name) {
       pbl.endIndex++;
     } else {
-      newBlock(char, SIDE_CHARS[char]);
+      newBlock(char, types[char]);
     }
     return;
   }
@@ -456,7 +457,7 @@ var next = function next(pre_char, char, next_char) {
 
   if (captureSigns(pre_char, char)) return;
 
-  newBlock(char, "UNKNOWN_CHAR");
+  newBlock(char, {type: commons.BIT_TYPE.UNKOWN, name: commons.BIT_NAME.UNKOWN});
 
   commons.activeError = new SyntaxError("Unknown char `"+char+"` ("
     + char.charCodeAt(0) + ") at " + commons.rowIndex + ":" + commons.columnIndex);
@@ -474,7 +475,9 @@ exports.parse = function(filename, code) {
   root = new Block();
   root.rowIndex = 0;
   root.columnIndex = 0;
-  root.type = "ROOT";
+  root.name = commons.BIT_NAME.ROOT;
+  root.type = commons.BIT_TYPE.SCOPE;
+  root.scopeType = commons.scopeTypes.GLOBAL_SCOPE;
   commons.rootBlock = root;
   commons.activeBlock = root;
 
@@ -507,6 +510,7 @@ exports.parse = function(filename, code) {
     }
   }
 
+  inspectVariables(root);
   return root;
 };
 
