@@ -81,17 +81,17 @@ exports.scopeAnalysis = function scopeAnalysis(bl) {
   }
 };
 
-var evalVariable = function(bl, prev) {
+function evalVariable(bl, prev) {
   if (prev && prev.SET_VARIABLE) {
+    bl.isVariable = true;
     bl.parent.addVariable(bl);
 
     return;
   }
 
+}
 
-};
-
-var variableAnalysis = exports.variableAnalysis = function(bl) {
+exports.variableAnalysis = function variableAnalysis(bl) {
   for(var i= 0, lni = bl.subs.length; i < lni; i++) {
     var sub = bl.subs[i];
     var prev = sub.getPreviousBlock();

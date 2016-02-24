@@ -166,7 +166,8 @@ var BIT_TYPE = exports.BIT_TYPE = {
   JS_WORD             :   7,
   NUMBER              :   8,
   REGEXP              :   9,
-  UNKOWN              :  10
+  BOOLEAN             :  10,
+  UNKNOWN             :  11
 };
 
 var types = {
@@ -323,6 +324,7 @@ function block() {
   this.delimiter = null;
   this.variables = {};
   this.hasVariables = false;
+  this.isVariable = false;
 
   this.index = null;
   this.length = null;

@@ -6,6 +6,7 @@
 
 var fs = require('fs');
 var parser = require('./lexer');
+var commons = require('./commons');
 
 var string_allowed_next = {
   ":":1,
@@ -62,22 +63,22 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
   var arr = [];
   for (var i = 0; i < bl.length; i++) {
     var sub = bl[i];
-    if (sub.type == instruction) {
-      if (instruction == "SPACE") {
+    if (sub.name == instruction) {
+      if (instruction == commons.BIT_NAME.SPACE) {
         var prev = sub.getPreviousBlock(true);
-        if (!prev || parser.signs[prev.type] || prev.type == "SPACE" ||
-          prev.type == "NEW_LINE") {
+        if (!prev || prev.type == commons.BIT_TYPE.OPERATOR || prev.name == commons.BIT_NAME.SPACE ||
+          prev.name == commons.BIT_NAME.NEW_LINE) {
           continue;
         }
 
         var next = sub.getNextBlock(true);
-        if (!next || parser.signs[next.type] || prev.type == "SPACE" ||
-          next.type == "NEW_LINE") {
+        if (!next || next.type == commons.BIT_TYPE.OPERATOR || prev.name == commons.BIT_NAME.SPACE ||
+          next.name == commons.BIT_NAME.NEW_LINE) {
           continue;
         }
 
         sub.length = 1;
-      } else if (instruction == "COMMENT") {
+      } else if (instruction == commons.BIT_NAME.COMMENT) {
         var prev = sub.getPreviousBlock(true);
         var minus = prev && (prev.rowIndex == sub.rowIndex);
 
@@ -97,9 +98,10 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
         }
 
         sub.length = null;  // we want delimiter to return
-        sub.type = "NEW_LINE";
+        sub.name = commons.BIT_NAME.NEW_LINE;
+        sub.type = commons.BIT_TYPE.NO_OP;
         sub.delimiter = "\n";
-      } else if (instruction == "NEW_LINE") {
+      } else if (instruction == commons.BIT_NAME.NEW_LINE) {
         var prev = sub.getPreviousBlock();
         var next = sub.getNextBlock();
         var nn = next ? next.getNextBlock() : null;
@@ -108,7 +110,7 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
           continue;
         }
 
-        if (prev.type == "STRING") {
+        if (prev.name == commons.BIT_NAME.STRING) {
           if (string_allowed_next.hasOwnProperty(next.delimiter))
             continue;
 
@@ -116,22 +118,22 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
             continue;
         }
 
-        if (next.type == "STRING") {
+        if (next.name == commons.BIT_NAME.STRING) {
           if (string_allowed_pre.hasOwnProperty(prev.delimiter))
             continue;
         }
 
-        var semi = (prev.type == "STRING" || next.type == "STRING");
+        var semi = (prev.name == commons.BIT_NAME.STRING || next.name == commons.BIT_NAME.STRING);
         if (!semi) {
           if (next.isWordish()) {
             if (!word_allowed_next.hasOwnProperty(prev.delimiter)) {
               // skip `} catch` exception
-              if (prev.delimiter == "}" && next.type == "JS_CATCH") {
+              if (prev.delimiter == "}" && next.name == commons.BIT_NAME.JS_CATCH) {
                 continue;
               }
 
               // check `var x` or `function func()`
-              if (!(prev.type.indexOf("JS_")===0 && next.type == "WORD")) {
+              if (!(prev.type == commons.BIT_TYPE.JS_WORD && next.name == commons.BIT_NAME.WORD)) {
                 semi = true;
               }
             } else {
@@ -141,12 +143,14 @@ function cleanInstruction(blocks_, instruction, keep_row_index) {
         }
 
         if (semi) {
-          sub.type = "SEMI_COLON";
+          sub.name = commons.BIT_NAME.SEMI_COLON;
+          sub.type = commons.BIT_TYPE.OPERATOR;
           sub.delimiter = ";";
           sub.length = 1;
           sub.index = null;  // override original text from index
         } else {
-          sub.type = "SPACE";
+          sub.name = commons.BIT_NAME.SPACE;
+          sub.type = commons.BIT_TYPE.OPERATOR;
           sub.delimiter = " ";
           sub.length = 1;
           sub.index = null;  // override original text from index
@@ -179,9 +183,10 @@ function cleanTabs(blocks_) {
   var arr = [];
   for (var i = 0; i < bl.length; i++) {
     var sub = bl[i];
-    if (sub.type == "TAB") {
+    if (sub.name == commons.BIT_NAME.TAB) {
       sub.delimiter = ' ';
-      sub.type = "SPACE";
+      sub.name = commons.BIT_NAME.SPACE;
+      sub.type = commons.BIT_TYPE.NO_OP;
       sub.length = 1;
     }
     arr.push(sub);
@@ -252,10 +257,11 @@ function minimizeNames(blocks_) {
   var arr = [];
   for (var i = 0; i < bl.length; i++) {
     var sub = bl[i];
-    if (sub.type == "WORD") {
-      var updateName = (sub.isNewDefinition() || !sub.isProperty());
-      updateName =
-        updateName && sub.dataType != "number" && sub.dataType != "boolean";
+    if (sub.name == commons.BIT_NAME.WORD) {
+      var updateName = bl.parent ? bl.parent.scopeType != commons.scopeTypes.OBJECT_DEFINITION : true;
+
+      if (updateName)
+        updateName = sub.type != commons.BIT_TYPE.BOOLEAN && sub.type != commons.BIT_TYPE.NUMBER;
 
       if (updateName) {
         var name = sub.getData();
@@ -271,11 +277,11 @@ function minimizeNames(blocks_) {
         // it was either < 2 or reserved
         // or it was a sub property of an object
         // we do not minimize sub prop. names
-        if (pbl && pbl.type == "JS_FUNCTION") {
+        if (pbl && pbl.name == commons.BIT_NAME.JS_FUNCTION) {
           pbl = pbl.getPreviousBlock();
           if (pbl && pbl.delimiter == "=") {
             pbl = pbl.getPreviousBlock();
-            if (pbl && pbl.type == "WORD" && pbl.getData() == name)
+            if (pbl && pbl.name == commons.BIT_NAME.WORD && pbl.getData() == name)
               explicit_naming = true;
           }
         }
@@ -288,7 +294,7 @@ function minimizeNames(blocks_) {
               dict_min[name] = pre;
             }
 
-            sub.updateName(pre);
+            sub.changeValue(pre);
           }
         }
       }
@@ -307,11 +313,11 @@ exports.minimize = function(filename, code, keep_row_index) {
   var res = parser.parse(filename, code);
 
   cleanTabs(res, keep_row_index);
-  cleanInstruction(res, "COMMENT", keep_row_index);
-  cleanInstruction(res, "SPACE", keep_row_index);
+  cleanInstruction(res, commons.BIT_NAME.COMMENT, keep_row_index);
+  cleanInstruction(res, commons.BIT_NAME.SPACE, keep_row_index);
 
   if (!keep_row_index) {
-    cleanInstruction(res, "NEW_LINE", keep_row_index);
+    cleanInstruction(res, commons.BIT_NAME.NEW_LINE, keep_row_index);
   }
 
   minimizeNames(res);

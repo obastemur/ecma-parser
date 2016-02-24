@@ -122,17 +122,21 @@ var checkWordType = function checkWordType(bl) {
   } else {
     bl.name = commons.BIT_NAME.WORD;
 
-    var parsed = parseFloat(str);
-    var number = false;
-    if (parsed != 0 && !isNaN(parsed)) {
-      number = true;
-    }
-
-    if (!number)
-      if (parsed === 0 && str.replace(/[0]+/g, "").trim().length === 0)
+    if (str.trim() == "false" || str.trim() == "true") {
+      bl.type = commons.BIT_TYPE.BOOLEAN;
+    } else {
+      var parsed = parseFloat(str);
+      var number = false;
+      if (parsed != 0 && !isNaN(parsed)) {
         number = true;
+      }
 
-    if (number) bl.type = commons.BIT_TYPE.NUMBER;
+      if (!number)
+        if (parsed === 0 && str.replace(/[0]+/g, "").trim().length === 0)
+          number = true;
+
+      if (number) bl.type = commons.BIT_TYPE.NUMBER;
+    }
   }
 
   if (!bl.type) {
