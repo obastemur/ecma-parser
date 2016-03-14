@@ -4,7 +4,7 @@ Ecmascript instruction parser (Lexical, Syntactical) . Tested on popular Javascr
 
 ### How it works
 
-- Download [JXcore](https://jxcore.com/downloads)
+- Download [JXcore](https://github.com/jxcore/jxcore-release)
 - type `jx install ecma-parser` or `npm install ecma-parser`
 
 #### Sample Code:
